@@ -1,0 +1,15 @@
+services:
+#------ Nextcloud <https://github.com/linuxserver/docker-nextcloud> ------ 
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /nextcloud/config:/config
+      - /nextcloud/data:/data
+    ports:
+      - 443:443
+    restart: unless-stopped
