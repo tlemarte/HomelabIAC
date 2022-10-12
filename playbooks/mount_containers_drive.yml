@@ -1,0 +1,11 @@
+#not tested
+- name: Mount containers network share
+  hosts: linux
+  become: true
+  tasks:
+    - name: Mount a device by label
+      mount:
+      path: /mounts/backups
+      src: LABEL=Backup
+      fstype: ext4
+      state: present

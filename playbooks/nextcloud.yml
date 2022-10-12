@@ -1,0 +1,39 @@
+#------ Nextcloud <https://github.com/linuxserver/docker-nextcloud> ------ 
+- name: Run nextcloud container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull nextcloud image.
+      containers.podman.podman_image:
+        name: lscr.io/linuxserver/nextcloud:latest
+        tag: nextcloud
+
+    - name: Create directorys for nextcloud container
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - '/mnt/containers/nextcloud'
+        - '/mnt/containers/nextcloud/config'
+        - '/mnt/containers/nextcloud/data'
+
+    - name: Create nextcloud container.
+      containers.podman.podman_container:
+        name: nextcloud
+        image: nextcloud
+        state: started
+        restart_policy: "unless-stopped"
+        privileged: true
+        device:
+          - "/mnt/containers/nextcloud/config:/config:rwm"
+          - "/mnt/containers/nextcloud:/data:rwm"
+        # Following gives CHOWN denied errors  
+        #volume:
+        #  - /mnt/containers/nextcloud/config:/config
+        #  - /mnt/containers/nextcloud:/data
+        ports:
+          - "444:443"
+        env:
+          PUID: "1000"
+          PGID: "1000"
+          TZ: America/Los_Angeles

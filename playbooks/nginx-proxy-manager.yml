@@ -1,0 +1,33 @@
+#------ <https://github.com/NginxProxyManager/nginx-proxy-manager> ------ 
+- name: Run Nginx Proxy Manager container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull Nginx Proxy Manager image.
+      containers.podman.podman_image:
+        name: jc21/nginx-proxy-manager:latest
+        tag: nginx-proxy-manager
+
+    - name: Create directorys for Nginx Proxy Manager container
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - '/mnt/containers/nginx-proxy-manager'
+        - '/mnt/containers/nginx-proxy-manager/data'
+        - '/mnt/containers/nginx-proxy-manager/letsencrypt'
+
+    - name: Create Nginx Proxy Manager container.
+      containers.podman.podman_container:
+        name: nginx-proxy-manager
+        image: nginx-proxy-manager
+        state: started
+        restart_policy: "unless-stopped"
+        privileged: true
+        device:
+          - "/mnt/containers/nginx-proxy-manager/data:/data:rwm"
+          - "/mnt/containers/nginx-proxy-manager/letsencrypt:/etc/letsencrypt:rwm"
+        ports:
+          - "443:443"
+          - "80:80"
+          - "81:81"

@@ -1,0 +1,44 @@
+- name: Install and update specific packages
+  hosts: rhel01
+  become: true
+  tasks:
+
+    - name: Install and/or update Podman.
+      package: 
+        name: podman
+        state: latest
+
+    - name: Install and/or update nfs-utils
+      package:
+        name: nfs-utils
+        state: latest
+
+    - name: Create containers directory
+      file:
+        path: /mnt/containers
+        state: directory
+
+    - name: Mount Containers share
+      ansible.posix.mount:
+        path: /mnt/containers
+        src: TRUENAS:/mnt/NAS-Pool/containers
+        fstype: nfs
+        state: present
+
+#Notes:
+#Use "package" instead of "yum" to be distribution agnostic
+
+#  tasks:
+#  - name : Install multiple packages
+#    package: name={{ item }} state=latest update_cache=true
+#    loop: [git, wget, unzip, curl]
+
+#  - name : Update all packages
+#    package: name=* state=latest update_cache=true
+
+# - name : Install Remi package from .rpm file
+#    package: name=https://rpms.remirepo.net/enterprise/remi-release-8.rpm state=present update_cache=true
+
+#   tasks:
+#  - name : Uninstall nginx package
+#    package: name=nginx state=absent
