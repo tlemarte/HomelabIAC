@@ -8,7 +8,7 @@
         name: lscr.io/linuxserver/nextcloud:latest
         tag: nextcloud
 
-    - name: Create directorys for nextcloud container
+    - name: Create directories for nextcloud container
       file:
         path: "{{ item }}"
         state: directory
@@ -21,7 +21,7 @@
       containers.podman.podman_container:
         name: nextcloud
         image: nextcloud
-        state: started
+        state: present
         restart_policy: "unless-stopped"
         privileged: true
         device:

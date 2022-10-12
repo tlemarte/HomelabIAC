@@ -8,7 +8,7 @@
         name: jc21/nginx-proxy-manager:latest
         tag: nginx-proxy-manager
 
-    - name: Create directorys for Nginx Proxy Manager container
+    - name: Create directories for Nginx Proxy Manager container
       file:
         path: "{{ item }}"
         state: directory
@@ -21,7 +21,7 @@
       containers.podman.podman_container:
         name: nginx-proxy-manager
         image: nginx-proxy-manager
-        state: started
+        state: present
         restart_policy: "unless-stopped"
         privileged: true
         device:

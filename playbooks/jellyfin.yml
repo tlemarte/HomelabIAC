@@ -1,0 +1,49 @@
+#------ Jellyfin <https://github.com/linuxserver/docker-jellyfin> ------ 
+- name: Run jellyfin container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull jellyfin image.
+      containers.podman.podman_image:
+        name: lscr.io/linuxserver/jellyfin:latest
+        tag: jellyfin
+
+    - name: Create directories for jellyfin container
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - '/mnt/media/tvshows'
+        - '/mnt/media/movies'
+        - '/mnt/media/music'
+        - '/mnt/media/audiobooks'
+        - '/mnt/containers/jellyfin'
+        - '/mnt/containers/jellyfin/data'
+
+    - name: Create jellyfin container.
+      containers.podman.podman_container:
+        name: jellyfin
+        image: jellyfin
+        state: present
+        restart_policy: "unless-stopped"
+        privileged: true
+        device:
+          - "/mnt/media/tvshows:/data/tvshows:rwm"
+          - "/mnt/media/movies:/data/movies:rwm"
+          - "/mnt/media/music:/data/music:rwm"
+          - "/mnt/media/audiobooks:/data/audiobooks:rwm"
+          - "/mnt/containers/jellyfin/config:/config:rwm"
+        volume:
+          - "/mnt/media/tvshows:/data/tvshows"
+          - "/mnt/media/movies:/data/movies"
+          - "/mnt/media/music:/data/music"
+          - "/mnt/media/audiobooks:/data/audiobooks"
+        ports:
+          - 8096:8096
+          - 8920:8920
+          - 7359:7359/udp
+          - 1900:1900/udp
+        env:
+          PUID: "1000"
+          PGID: "1000"
+          TZ: America/Los_Angeles
