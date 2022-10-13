@@ -3,10 +3,10 @@
   hosts: rhel01
   become: true
   tasks:
-    - name: Pull jellyfin image.
+    - name: Pull jellyfin image
       containers.podman.podman_image:
-        name: 'lscr.io/linuxserver/jellyfin:latest'
-        tag: jellyfin
+        name: 'lscr.io/linuxserver/jellyfin'
+        tag: latest
 
     - name: Create directories for jellyfin container
       file:
@@ -20,10 +20,10 @@
         - '/mnt/containers/jellyfin'
         - '/mnt/containers/jellyfin/data'
 
-    - name: Create jellyfin container.
+    - name: Create jellyfin container
       containers.podman.podman_container:
         name: jellyfin
-        image: jellyfin
+        image: 'lscr.io/linuxserver/jellyfin:latest'
         state: present
         restart_policy: unless-stopped
         privileged: true

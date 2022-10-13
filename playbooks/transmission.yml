@@ -6,7 +6,7 @@
     - name: Pull transmission image.
       containers.podman.podman_image:
         name: 'lscr.io/linuxserver/transmission:latest'
-        tag: transmission
+        tag: latest
 
     - name: Create directories for transmission container
       file:
@@ -19,10 +19,10 @@
         - /mnt/containers/transmission/config
         - /mnt/containers/transmission/watch
 
-    - name: Create transmission container.
+    - name: Create transmission container
       containers.podman.podman_container:
         name: transmission
-        image: transmission
+        image: 'lscr.io/linuxserver/transmission:latest'
         state: started
         restart_policy: 'unless-stopped'
         privileged: true

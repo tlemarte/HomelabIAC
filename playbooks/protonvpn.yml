@@ -5,28 +5,28 @@
   tasks:
     - name: Pull protonvpn image
       containers.podman.podman_image:
-        name: ghcr.io/tprasadtp/protonvpn:latest
-        tag: protonvpn
+        name: 'ghcr.io/tprasadtp/protonvpn'
+        tag: latest
 
     - name: Create protonvpn container
       containers.podman.podman_container:
         name: protonvpn
-        image: protonvpn
+        image: 'ghcr.io/tprasadtp/protonvpn:latest'
         state: started
         restart_policy: 'unless-stopped'
         # privileged: true
         cap_add:
           - NET_ADMIN
         device:
-          - /dev/net/tun:rwm
+          - '/dev/net/tun:rwm'
         ports:
-          - 8091:8091
+          - '8091:8091'
           # For transmission
-          - 9091:9091
-          - 51413:51413
-          - 51413:51413/udp
+          - '9091:9091'
+          - '51413:51413'
+          - '51413:51413/udp'
         env:          
-          PROTONVPN_USERNAME: "{{ PROTONVPN_USERNAME }}"
-          PROTONVPN_PASSWORD: "{{ PROTONVPN_PASSWORD }}"
-          PROTONVPN_SERVER: "{{ PROTONVPN_SERVER }}"
-          PROTONVPN_TIER: "{{ PROTONVPN_TIER }}"
+          PROTONVPN_USERNAME: '{{ PROTONVPN_USERNAME }}'
+          PROTONVPN_PASSWORD: '{{ PROTONVPN_PASSWORD }}'
+          PROTONVPN_SERVER: '{{ PROTONVPN_SERVER }}'
+          PROTONVPN_TIER: '{{ PROTONVPN_TIER }}'

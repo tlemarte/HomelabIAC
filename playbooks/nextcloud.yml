@@ -3,10 +3,10 @@
   hosts: rhel01
   become: true
   tasks:
-    - name: Pull nextcloud image.
+    - name: Pull nextcloud image
       containers.podman.podman_image:
-        name: 'lscr.io/linuxserver/nextcloud:latest'
-        tag: nextcloud
+        name: 'lscr.io/linuxserver/nextcloud'
+        tag: latest
 
     - name: Create directories for nextcloud container
       file:
@@ -17,12 +17,12 @@
         - '/mnt/containers/nextcloud/config'
         - '/mnt/containers/nextcloud/data'
 
-    - name: Create nextcloud container.
+    - name: Create nextcloud container
       containers.podman.podman_container:
         name: nextcloud
-        image: nextcloud
-        state: present
-        restart_policy: 'unless-stopped'
+        image: 'lscr.io/linuxserver/nextcloud:latest'
+        state: started
+        restart_policy: unless-stopped
         privileged: true
         # Only works with volume mounted on the host with the following command options (https://access.redhat.com/solutions/6415411)
         # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context="system_u:object_r:container_file_t:s0" /mnt/containerstorage
@@ -38,4 +38,4 @@
         env:
           PUID: 1000
           PGID: 1000
-          TZ: America/Los_Angeles
+          TZ: 'America/Los_Angeles'
