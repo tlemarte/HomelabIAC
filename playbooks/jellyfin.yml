@@ -5,12 +5,12 @@
   tasks:
     - name: Pull jellyfin image.
       containers.podman.podman_image:
-        name: lscr.io/linuxserver/jellyfin:latest
+        name: 'lscr.io/linuxserver/jellyfin:latest'
         tag: jellyfin
 
     - name: Create directories for jellyfin container
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: directory
       with_items:
         - '/mnt/media/tvshows'
@@ -25,25 +25,28 @@
         name: jellyfin
         image: jellyfin
         state: present
-        restart_policy: "unless-stopped"
+        restart_policy: unless-stopped
         privileged: true
+        # Only works with volume mounted on the host with the following command options (https://access.redhat.com/solutions/6415411)
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context="system_u:object_r:container_file_t:s0" /mnt/containerstorage
+        # Why do I need to do both device and volume?        
         device:
-          - "/mnt/media/tvshows:/data/tvshows:rwm"
-          - "/mnt/media/movies:/data/movies:rwm"
-          - "/mnt/media/music:/data/music:rwm"
-          - "/mnt/media/audiobooks:/data/audiobooks:rwm"
-          - "/mnt/containers/jellyfin/config:/config:rwm"
+          - '/mnt/media/tvshows:/data/tvshows:rwm'
+          - '/mnt/media/movies:/data/movies:rwm'
+          - '/mnt/media/music:/data/music:rwm'
+          - '/mnt/media/audiobooks:/data/audiobooks:rwm'
+          - '/mnt/containers/jellyfin/config:/config:rwm'
         volume:
-          - "/mnt/media/tvshows:/data/tvshows"
-          - "/mnt/media/movies:/data/movies"
-          - "/mnt/media/music:/data/music"
-          - "/mnt/media/audiobooks:/data/audiobooks"
+          - '/mnt/media/tvshows:/data/tvshows'
+          - '/mnt/media/movies:/data/movies'
+          - '/mnt/media/music:/data/music'
+          - '/mnt/media/audiobooks:/data/audiobooks'
         ports:
-          - 8096:8096
-          - 8920:8920
-          - 7359:7359/udp
-          - 1900:1900/udp
+          - '8096:8096'
+          - '8920:8920'
+          - '7359:7359/udp'
+          - '1900:1900/udp'
         env:
-          PUID: "1000"
-          PGID: "1000"
-          TZ: America/Los_Angeles
+          PUID: 1000
+          PGID: 1000
+          TZ: 'America/Los_Angeles'

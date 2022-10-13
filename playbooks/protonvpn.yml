@@ -1,0 +1,32 @@
+#------ protonvpn <https://github.com/tprasadtp/protonvpn-docker> ------ 
+- name: Run protonvpn container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull protonvpn image
+      containers.podman.podman_image:
+        name: ghcr.io/tprasadtp/protonvpn:latest
+        tag: protonvpn
+
+    - name: Create protonvpn container
+      containers.podman.podman_container:
+        name: protonvpn
+        image: protonvpn
+        state: started
+        restart_policy: 'unless-stopped'
+        # privileged: true
+        cap_add:
+          - NET_ADMIN
+        device:
+          - /dev/net/tun:rwm
+        ports:
+          - 8091:8091
+          # For transmission
+          - 9091:9091
+          - 51413:51413
+          - 51413:51413/udp
+        env:          
+          PROTONVPN_USERNAME: "{{ PROTONVPN_USERNAME }}"
+          PROTONVPN_PASSWORD: "{{ PROTONVPN_PASSWORD }}"
+          PROTONVPN_SERVER: "{{ PROTONVPN_SERVER }}"
+          PROTONVPN_TIER: "{{ PROTONVPN_TIER }}"

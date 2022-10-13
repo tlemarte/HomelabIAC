@@ -1,0 +1,22 @@
+# Gives following error:
+# fatal: [rhel01]: FAILED! => {"changed": false, "msg": "Error mounting /mnt/media: umount.nfs: /mnt/media: device is busy\n"}
+# Can i have it just verify it is there with the correct options?
+- name: Mount network shared data
+  hosts: rhel01
+  become: true
+  tasks: 
+    - name: Mount media share
+      ansible.posix.mount:
+        src: TRUENAS:/mnt/media
+        path: /mnt/media
+        opts: rw,context="system_u:object_r:container_file_t:s0"
+        state: mounted
+        fstype: nfs
+
+    - name: Mount containers share
+      ansible.posix.mount:
+        src: TRUENAS:/mnt/containers
+        path: /mnt/containers
+        opts: rw,context="system_u:object_r:container_file_t:s0"
+        state: mounted
+        fstype: nfs
