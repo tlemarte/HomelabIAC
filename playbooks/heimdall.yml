@@ -1,0 +1,49 @@
+---
+#------ Heimdall <https://github.com/linuxserver/docker-heimdall> ------
+- name: Run heimdall container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull heimdall image
+      containers.podman.podman_image:
+        name: "lscr.io/linuxserver/heimdall"
+        tag: latest
+
+    - name: Create directories for heimdall container
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ CONTAINERS_PATH }}/heimdall"
+        - "{{ CONTAINERS_PATH }}/heimdall/config"
+
+    - name: Create heimdall container
+      containers.podman.podman_container:
+        name: heimdall
+        image: "lscr.io/linuxserver/heimdall:latest"
+        # Next two are managed by systemd
+        state: created
+        restart_policy: "no"
+        privileged: true
+        # Storage works after running the following, why?
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' {{ CONTAINERS_PATH }}torage
+        # sudo setsebool -P container_use_devices=true
+        device:
+          - "{{ CONTAINERS_PATH }}/heimdall/config:/config:rwm"
+        ports:
+          - 800:80
+          - 4430:443
+        env:
+          PUID: 1000
+          PGID: 1000
+          TZ: "America/Los_Angeles"
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start heimdall container
+      ansible.builtin.systemd:
+        name: "container-heimdall.service"
+        enabled: true
+        state: started
