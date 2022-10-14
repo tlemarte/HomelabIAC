@@ -1,0 +1,41 @@
+---
+#------ Sonarr <https://github.com/linuxserver/docker-sonarr> ------
+# https://wiki.servarr.com/sonarr
+- name: Run sonarr container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull sonarr image
+      containers.podman.podman_image:
+        name: 'lscr.io/linuxserver/sonarr'
+        tag: latest
+
+    - name: Create directories for sonarr container
+      file:
+        path: '{{ item }}'
+        state: directory
+      with_items:
+        - '/mnt/containers/sonarr'
+        - '/mnt/containers/sonarr/config'
+        - '/mnt/media/tvshows'
+        - '/mnt/media/downloads/complete'
+
+    - name: Create sonarr container
+      containers.podman.podman_container:
+        name: sonarr
+        image: 'lscr.io/linuxserver/sonarr:latest'
+        state: started
+        restart_policy: unless-stopped
+        privileged: true
+        # Storage works after running the following, why?
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' /mnt/containerstorage
+        # sudo setsebool -P container_use_devices=true
+        device:
+          - '/mnt/containers/sonarr/config:/config:rwm'
+          - '/mnt/media/tvshows:/tv:rwm'
+          - '/mnt/media/downloads/complete:/downloads:rwm'
+        network: 'container:protonvpn'
+        env:
+          PUID: 1000
+          PGID: 1000
+          TZ: America/Los_Angeles

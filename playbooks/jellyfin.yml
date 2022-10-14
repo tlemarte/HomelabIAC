@@ -27,20 +27,15 @@
         state: present
         restart_policy: unless-stopped
         privileged: true
-        # Only works with volume mounted on the host with the following command options (https://access.redhat.com/solutions/6415411)
-        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context="system_u:object_r:container_file_t:s0" /mnt/containerstorage
-        # Why do I need to do both device and volume?        
+        # Storage works after running the following, why?
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' /mnt/containerstorage
+        # sudo setsebool -P container_use_devices=true     
         device:
           - '/mnt/media/tvshows:/data/tvshows:rwm'
           - '/mnt/media/movies:/data/movies:rwm'
           - '/mnt/media/music:/data/music:rwm'
           - '/mnt/media/audiobooks:/data/audiobooks:rwm'
           - '/mnt/containers/jellyfin/config:/config:rwm'
-        volume:
-          - '/mnt/media/tvshows:/data/tvshows'
-          - '/mnt/media/movies:/data/movies'
-          - '/mnt/media/music:/data/music'
-          - '/mnt/media/audiobooks:/data/audiobooks'
         ports:
           - '8096:8096'
           - '8920:8920'

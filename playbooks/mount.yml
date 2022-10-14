@@ -9,7 +9,10 @@
       ansible.posix.mount:
         src: TRUENAS:/mnt/media
         path: /mnt/media
-        opts: rw,context="system_u:object_r:container_file_t:s0"
+        opts: 
+        - rw
+        - context="system_u:object_r:container_file_t:s0"
+        - nolock
         state: mounted
         fstype: nfs
 

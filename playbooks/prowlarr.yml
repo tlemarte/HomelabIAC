@@ -22,17 +22,14 @@
         name: prowlarr
         image: 'lscr.io/linuxserver/prowlarr:develop'
         state: started
-        restart_policy: 'unless-stopped'
+        restart_policy: unless-stopped
         privileged: true
-        # Only works with volume mounted on the host with the following command options (https://access.redhat.com/solutions/6415411)
+        # Storage works after running the following, why?
         # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context="system_u:object_r:container_file_t:s0" /mnt/containerstorage
-        # Why do I need to do both device and volume?
+        # sudo setsebool -P container_use_devices=true
         device:
           - '/mnt/containers/prowlarr/config:/config:rwm'
-        volume:
-          - '/mnt/containers/prowlarr/config:/config'
-        ports:
-          - '9696:9696'
+        network: 'container:protonvpn'
         env:
           PUID: 1000
           PGID: 1000

@@ -13,7 +13,7 @@
         name: protonvpn
         image: 'ghcr.io/tprasadtp/protonvpn:latest'
         state: started
-        restart_policy: 'unless-stopped'
+        restart_policy: unless-stopped
         # privileged: true
         cap_add:
           - NET_ADMIN
@@ -25,6 +25,16 @@
           - '9091:9091'
           - '51413:51413'
           - '51413:51413/udp'
+          # For prowlarr
+          - '9696:9696'
+          # For sonarr
+          - '8989:8989'
+          # For radarr
+          - '7878:7878'
+          # For lidarr
+          - '8686:8686'
+          # For bazarr
+          - '6767:6767'
         env:          
           PROTONVPN_USERNAME: '{{ PROTONVPN_USERNAME }}'
           PROTONVPN_PASSWORD: '{{ PROTONVPN_PASSWORD }}'

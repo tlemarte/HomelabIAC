@@ -1,0 +1,40 @@
+#------ bazarr <https://github.com/linuxserver/docker-bazarr> ------ 
+# https://wiki.servarr.com/bazarr
+- name: Run bazarr container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull bazarr image
+      containers.podman.podman_image:
+        name: 'lscr.io/linuxserver/bazarr'
+        tag: latest
+
+    - name: Create directories for bazarr container
+      file:
+        path: '{{ item }}'
+        state: directory
+      with_items:
+        - '/mnt/containers/bazarr'
+        - '/mnt/containers/bazarr/config'
+        - '/mnt/media/books'
+        - '/mnt/media/downloads/complete'
+
+    - name: Create bazarr container
+      containers.podman.podman_container:
+        name: bazarr
+        image: 'lscr.io/linuxserver/bazarr:latest'
+        state: started
+        restart_policy: unless-stopped
+        privileged: true
+        # Storage works after running the following, why?
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' /mnt/containerstorage
+        # sudo setsebool -P container_use_devices=true
+        device:
+          - '/mnt/containers/bazarr/config:/config:rwm'
+          - '/mnt/media/movies:/movies:rwm'
+          - '/mnt/media/downloads/complete:/downloads:rwm'
+        network: 'container:protonvpn'
+        env:
+          PUID: 1000
+          PGID: 1000
+          TZ: America/Los_Angeles
