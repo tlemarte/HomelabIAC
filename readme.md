@@ -28,25 +28,12 @@ QEMU quest agent for proxmox
 ```bash
 yum install qemu-guest-agent
 systemctl start qemu-guest-agent
-
+```
+Cockpit
+```
 systemctl enable --now cockpit.socket
 ```
 
-Install docker, with --allowerasing to replace podman
-```
-sudo yum install -y yum-utils
-sudo yum-config-manager \
-    --add-repo \
-    https://download.docker.com/linux/centos/docker-ce.repo
-    
-sudo yum install docker-ce \
-    docker-ce-cli \
-    containerd.io \
-    docker-compose-plugin \
-    --allowerasing
-
-sudo systemctl start docker
-```
 #### ubuntu01
 On the machine running Ansible (AnsibleController), run the following command to create a key pair for SSH connection without a password
 ```
