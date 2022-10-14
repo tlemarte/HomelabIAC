@@ -29,7 +29,7 @@
         restart_policy: "no"
         privileged: true
         # Storage works after running the following, why?
-        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' {{ CONTAINERS_PATH }}torage
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context="system_u:object_r:container_file_t:s0",nolock /mnt/containerstorage
         # sudo setsebool -P container_use_devices=true
         device:
           - "{{ MEDIA_PATH }}/downloads:/downloads:rwm"
