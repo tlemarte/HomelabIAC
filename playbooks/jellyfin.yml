@@ -1,47 +1,59 @@
-#------ Jellyfin <https://github.com/linuxserver/docker-jellyfin> ------ 
+---
+#------ Jellyfin <https://github.com/linuxserver/docker-jellyfin> ------
 - name: Run jellyfin container
   hosts: rhel01
   become: true
   tasks:
     - name: Pull jellyfin image
       containers.podman.podman_image:
-        name: 'lscr.io/linuxserver/jellyfin'
+        name: "lscr.io/linuxserver/jellyfin"
         tag: latest
 
     - name: Create directories for jellyfin container
       file:
-        path: '{{ item }}'
+        path: "{{ item }}"
         state: directory
       with_items:
-        - '/mnt/media/tvshows'
-        - '/mnt/media/movies'
-        - '/mnt/media/music'
-        - '/mnt/media/audiobooks'
-        - '/mnt/containers/jellyfin'
-        - '/mnt/containers/jellyfin/data'
+        - "{{ MEDIA_PATH }}/tvshows"
+        - "{{ MEDIA_PATH }}/movies"
+        - "{{ MEDIA_PATH }}/music"
+        - "{{ MEDIA_PATH }}/audiobooks"
+        - "{{ CONTAINERS_PATH }}/jellyfin"
+        - "{{ CONTAINERS_PATH }}/jellyfin/data"
 
     - name: Create jellyfin container
       containers.podman.podman_container:
         name: jellyfin
-        image: 'lscr.io/linuxserver/jellyfin:latest'
-        state: present
-        restart_policy: unless-stopped
+        image: "lscr.io/linuxserver/jellyfin:latest"
+        # Next two are managed by systemd
+        state: created
+        restart_policy: "no"
         privileged: true
         # Storage works after running the following, why?
-        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' /mnt/containerstorage
-        # sudo setsebool -P container_use_devices=true     
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' {{ CONTAINERS_PATH }}torage
+        # sudo setsebool -P container_use_devices=true
         device:
-          - '/mnt/media/tvshows:/data/tvshows:rwm'
-          - '/mnt/media/movies:/data/movies:rwm'
-          - '/mnt/media/music:/data/music:rwm'
-          - '/mnt/media/audiobooks:/data/audiobooks:rwm'
-          - '/mnt/containers/jellyfin/config:/config:rwm'
+          - "{{ MEDIA_PATH }}/tvshows:/data/tvshows:rwm"
+          - "{{ MEDIA_PATH }}/movies:/data/movies:rwm"
+          - "{{ MEDIA_PATH }}/music:/data/music:rwm"
+          - "{{ MEDIA_PATH }}/audiobooks:/data/audiobooks:rwm"
+          - "{{ CONTAINERS_PATH }}/jellyfin/config:/config:rwm"
         ports:
-          - '8096:8096'
-          - '8920:8920'
-          - '7359:7359/udp'
-          - '1900:1900/udp'
+          - "8096:8096"
+          - "8920:8920"
+          - "7359:7359/udp"
+          - "1900:1900/udp"
         env:
           PUID: 1000
           PGID: 1000
-          TZ: 'America/Los_Angeles'
+          TZ: "America/Los_Angeles"
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start jellyfin container
+      ansible.builtin.systemd :
+        name: "container-jellyfin.service"
+        enabled: true
+        state: started

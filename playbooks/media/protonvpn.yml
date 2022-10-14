@@ -1,0 +1,56 @@
+---
+#------ protonvpn <https://github.com/tprasadtp/protonvpn-docker> ------
+- name: Run protonvpn container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull protonvpn image
+      containers.podman.podman_image:
+        name: "ghcr.io/tprasadtp/protonvpn"
+        tag: latest
+
+    - name: Create protonvpn container
+      containers.podman.podman_container:
+        name: protonvpn
+        image: "ghcr.io/tprasadtp/protonvpn:latest"
+        # Next two are managed by systemd
+        state: created
+        restart_policy: "no"
+        # privileged: true
+        cap_add:
+          - NET_ADMIN
+        device:
+          - "/dev/net/tun:rwm"
+        ports:
+          - "8091:8091"
+          # For transmission
+          - "9091:9091"
+          - "51413:51413"
+          - "51413:51413/udp"
+          # For prowlarr
+          - "9696:9696"
+          # For sonarr
+          - "8989:8989"
+          # For radarr
+          - "7878:7878"
+          # For lidarr
+          - "8686:8686"
+          # For bazarr
+          - "6767:6767"
+          # For readarr
+          - "8787:8787"
+        env:
+          PROTONVPN_USERNAME: "{{ PROTONVPN_USERNAME }}"
+          PROTONVPN_PASSWORD: "{{ PROTONVPN_PASSWORD }}"
+          PROTONVPN_SERVER: "{{ PROTONVPN_SERVER }}"
+          PROTONVPN_TIER: "{{ PROTONVPN_TIER }}"
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start protonvpn container
+      ansible.builtin.systemd :
+        name: "container-protonvpn.service"
+        enabled: true
+        state: started

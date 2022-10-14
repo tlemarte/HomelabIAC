@@ -1,0 +1,52 @@
+---
+#------ Readarr <https://github.com/linuxserver/docker-readarr> ------
+# https://wiki.servarr.com/readarr
+- name: Run readarr container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull readarr image
+      containers.podman.podman_image:
+        name: "lscr.io/linuxserver/readarr"
+        tag: develop
+
+    - name: Create directories for readarr container
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ CONTAINERS_PATH }}/readarr"
+        - "{{ CONTAINERS_PATH }}/readarr/config"
+        - "{{ MEDIA_PATH }}/books"
+        - "{{ MEDIA_PATH }}/downloads/complete"
+
+    - name: Create readarr container
+      containers.podman.podman_container:
+        name: readarr
+        image: "lscr.io/linuxserver/readarr:develop"
+        # Next two are managed by systemd
+        state: created
+        restart_policy: "no"
+        privileged: true
+        # Storage works after running the following, why?
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' {{ CONTAINERS_PATH }}torage
+        # sudo setsebool -P container_use_devices=true
+        device:
+          - "{{ CONTAINERS_PATH }}/readarr/config:/config:rwm"
+          - "{{ MEDIA_PATH }}/books:/books:rwm"
+          - "{{ MEDIA_PATH }}/downloads/complete:/downloads:rwm"
+        network: "container:protonvpn"
+        env:
+          PUID: 1000
+          PGID: 1000
+          TZ: America/Los_Angeles
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start readarr container
+      ansible.builtin.systemd :
+        name: "container-readarr.service"
+        enabled: true
+        state: started

@@ -1,0 +1,54 @@
+---
+#------ transmission <https://github.com/linuxserver/docker-transmission> ------
+- name: Run transmission container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull transmission image.
+      containers.podman.podman_image:
+        name: "lscr.io/linuxserver/transmission:latest"
+        tag: latest
+
+    - name: Create directories for transmission container
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ MEDIA_PATH }}/downloads"
+        - "{{ CONTAINERS_PATH }}/transmission"
+        - "{{ CONTAINERS_PATH }}/transmission/downloads"
+        - "{{ CONTAINERS_PATH }}/transmission/config"
+        - "{{ CONTAINERS_PATH }}/transmission/watch"
+
+    - name: Create transmission container
+      containers.podman.podman_container:
+        name: transmission
+        image: "lscr.io/linuxserver/transmission:latest"
+        # Next two are managed by systemd
+        state: created
+        restart_policy: "no"
+        privileged: true
+        # Storage works after running the following, why?
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' {{ CONTAINERS_PATH }}torage
+        # sudo setsebool -P container_use_devices=true
+        device:
+          - "{{ MEDIA_PATH }}/downloads:/downloads:rwm"
+          - "{{ CONTAINERS_PATH }}/transmission/config:/config:rwm"
+          - "{{ CONTAINERS_PATH }}/transmission/watch:/watch:rwm"
+        network: "container:protonvpn"
+        env:
+          PUID: 1000
+          PGID: 1000
+          TZ: America/Los_Angeles
+          USER: "{{ TRANSMISSION_USERNAME }}"
+          PASS: "{{ TRANSMISSION_PASSWORD }}"
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start transmission container
+      ansible.builtin.systemd :
+        name: "container-transmission.service"
+        enabled: true
+        state: started

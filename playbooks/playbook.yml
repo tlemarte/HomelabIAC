@@ -2,9 +2,8 @@
   hosts: rhel01
   become: true
   tasks:
-
     - name: Install and/or update Podman
-      package: 
+      package:
         name: podman
         state: latest
 
@@ -35,8 +34,7 @@
         path: /mnt/media
         src: TRUENAS:/mnt/NAS-Pool/media
         fstype: nfs
-        state: present        
-
+        state: present
 #Notes:
 #Use "package" instead of "yum" to be distribution agnostic
 

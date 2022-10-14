@@ -1,0 +1,10 @@
+---
+# ProtonVPN creates the pod, must be ran first.
+- import_playbook: protonvpn.yml
+- import_playbook: transmission.yml
+- import_playbook: prowlarr.yml
+- import_playbook: radarr.yml
+- import_playbook: sonarr.yml
+- import_playbook: lidarr.yml
+- import_playbook: bazarr.yml
+- import_playbook: readarr.yml

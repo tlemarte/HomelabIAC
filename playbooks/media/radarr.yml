@@ -1,0 +1,52 @@
+---
+#------ Radarr <https://github.com/linuxserver/docker-radarr> ------
+# https://wiki.servarr.com/radarr
+- name: Run radarr container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Pull radarr image
+      containers.podman.podman_image:
+        name: "lscr.io/linuxserver/radarr"
+        tag: latest
+
+    - name: Create directories for radarr container
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ CONTAINERS_PATH }}/radarr"
+        - "{{ CONTAINERS_PATH }}/radarr/config"
+        - "{{ MEDIA_PATH }}/movies"
+        - "{{ MEDIA_PATH }}/downloads/complete"
+
+    - name: Create radarr container
+      containers.podman.podman_container:
+        name: radarr
+        image: "lscr.io/linuxserver/radarr:latest"
+        # Next two are managed by systemd
+        state: created
+        restart_policy: "no"
+        privileged: true
+        # Storage works after running the following, why?
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' {{ CONTAINERS_PATH }}torage
+        # sudo setsebool -P container_use_devices=true
+        device:
+          - "{{ CONTAINERS_PATH }}/radarr/config:/config:rwm"
+          - "{{ MEDIA_PATH }}/movies:/movies:rwm"
+          - "{{ MEDIA_PATH }}/downloads/complete:/downloads:rwm"
+        network: "container:protonvpn"
+        env:
+          PUID: 1000
+          PGID: 1000
+          TZ: America/Los_Angeles
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start radarr container
+      ansible.builtin.systemd :
+        name: "container-radarr.service"
+        enabled: true
+        state: started

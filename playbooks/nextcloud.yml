@@ -1,38 +1,50 @@
-#------ Nextcloud <https://github.com/linuxserver/docker-nextcloud> ------ 
+---
+#------ Nextcloud <https://github.com/linuxserver/docker-nextcloud> ------
 - name: Run nextcloud container
   hosts: rhel01
   become: true
   tasks:
     - name: Pull nextcloud image
       containers.podman.podman_image:
-        name: 'lscr.io/linuxserver/nextcloud'
+        name: "lscr.io/linuxserver/nextcloud"
         tag: latest
 
     - name: Create directories for nextcloud container
       file:
-        path: '{{ item }}'
+        path: "{{ item }}"
         state: directory
       with_items:
-        - '/mnt/containers/nextcloud'
-        - '/mnt/containers/nextcloud/config'
-        - '/mnt/containers/nextcloud/data'
+        - "{{ CONTAINERS_PATH }}/nextcloud"
+        - "{{ CONTAINERS_PATH }}/nextcloud/config"
+        - "{{ CONTAINERS_PATH }}/nextcloud/data"
 
     - name: Create nextcloud container
       containers.podman.podman_container:
         name: nextcloud
-        image: 'lscr.io/linuxserver/nextcloud:latest'
-        state: started
-        restart_policy: unless-stopped
+        image: "lscr.io/linuxserver/nextcloud:latest"
+        # Next two are managed by systemd
+        state: created
+        restart_policy: "no"
         privileged: true
         # Storage works after running the following, why?
-        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' /mnt/containerstorage
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' {{ CONTAINERS_PATH }}torage
         # sudo setsebool -P container_use_devices=true
         device:
-          - '/mnt/containers/nextcloud/config:/config:rwm'
-          - '/mnt/containers/nextcloud:/data:rwm'
+          - "{{ CONTAINERS_PATH }}/nextcloud/config:/config:rwm"
+          - "{{ CONTAINERS_PATH }}/nextcloud:/data:rwm"
         ports:
-          - '444:443'
+          - "444:443"
         env:
           PUID: 1000
           PGID: 1000
-          TZ: 'America/Los_Angeles'
+          TZ: "America/Los_Angeles"
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start nextcloud container
+      ansible.builtin.systemd :
+        name: "container-nextcloud.service"
+        enabled: true
+        state: started

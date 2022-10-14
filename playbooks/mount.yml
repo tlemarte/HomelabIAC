@@ -4,22 +4,25 @@
 - name: Mount network shared data
   hosts: rhel01
   become: true
-  tasks: 
+  tasks:
     - name: Mount media share
       ansible.posix.mount:
         src: TRUENAS:/mnt/media
-        path: /mnt/media
-        opts: 
-        - rw
-        - context="system_u:object_r:container_file_t:s0"
-        - nolock
+        path: "{{ MEDIA_PATH }}/"
+        opts:
+          - rw
+          - context="system_u:object_r:container_file_t:s0"
+          - nolock
         state: mounted
         fstype: nfs
 
     - name: Mount containers share
       ansible.posix.mount:
-        src: TRUENAS:/mnt/containers
-        path: /mnt/containers
-        opts: rw,context="system_u:object_r:container_file_t:s0"
+        src: TRUENAS:{{ CONTAINERS_PATH }}
+        path: "{{ CONTAINERS_PATH }}"
+        opts:
+          - rw
+          - context="system_u:object_r:container_file_t:s0"
+          - nolock
         state: mounted
         fstype: nfs

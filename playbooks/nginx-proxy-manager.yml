@@ -1,36 +1,48 @@
-#------ <https://github.com/NginxProxyManager/nginx-proxy-manager> ------ 
+---
+#------ <https://github.com/NginxProxyManager/nginx-proxy-manager> ------
 - name: Run Nginx Proxy Manager container
   hosts: rhel01
   become: true
   tasks:
     - name: Pull Nginx Proxy Manager image
       containers.podman.podman_image:
-        name: 'jc21/nginx-proxy-manager:latest'
+        name: "jc21/nginx-proxy-manager:latest"
         tag: latest
 
     - name: Create directories for Nginx Proxy Manager container
       file:
-        path: '{{ item }}'
+        path: "{{ item }}"
         state: directory
       with_items:
-        - '/mnt/containers/nginx-proxy-manager'
-        - '/mnt/containers/nginx-proxy-manager/data'
-        - '/mnt/containers/nginx-proxy-manager/letsencrypt'
+        - "{{ CONTAINERS_PATH }}/nginx-proxy-manager"
+        - "{{ CONTAINERS_PATH }}/nginx-proxy-manager/data"
+        - "{{ CONTAINERS_PATH }}/nginx-proxy-manager/letsencrypt"
 
     - name: Create Nginx Proxy Manager container
       containers.podman.podman_container:
         name: nginx-proxy-manager
-        image: 'jc21/nginx-proxy-manager:latest'
-        state: present
-        restart_policy: unless-stopped
+        image: "jc21/nginx-proxy-manager:latest"
+        # Next two are managed by systemd
+        state: created
+        restart_policy: "no"
         # Storage works after running the following, why?
-        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' /mnt/containerstorage
-        # sudo setsebool -P container_use_devices=true    
+        # mount -t nfs my-nfs-share.example.com:/opt/container-nfs-storage -o rw,context='system_u:object_r:container_file_t:s0' {{ CONTAINERS_PATH }}torage
+        # sudo setsebool -P container_use_devices=true
         privileged: true
         device:
-          - '/mnt/containers/nginx-proxy-manager/data:/data:rwm'
-          - '/mnt/containers/nginx-proxy-manager/letsencrypt:/etc/letsencrypt:rwm'
+          - "{{ CONTAINERS_PATH }}/nginx-proxy-manager/data:/data:rwm"
+          - "{{ CONTAINERS_PATH }}/nginx-proxy-manager/letsencrypt:/etc/letsencrypt:rwm"
         ports:
-          - '443:443'
-          - '80:80'
-          - '81:81'
+          - "443:443"
+          - "80:80"
+          - "81:81"
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start nginx-proxy-manager container
+      ansible.builtin.systemd :
+        name: "container-nginx-proxy-manager.service"
+        enabled: true
+        state: started
