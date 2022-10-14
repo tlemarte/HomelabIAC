@@ -28,14 +28,21 @@
         # sudo setsebool -P container_use_devices=true
         # Why do I need to do both device and volume?
         device:
-          - '/mnt/containers/nextcloud/config:/config:rwm'
-          - '/mnt/containers/nextcloud:/data:rwm'
-        #volume:
-        #  - '/mnt/containers/nextcloud/config:/config'
-        #  - '/mnt/containers/nextcloud:/data'
+          - "{{ CONTAINERS_PATH }}/nextcloud/config:/config:rwm"
+          - "{{ CONTAINERS_PATH }}/nextcloud:/data:rwm"
         ports:
-          - '444:443'
+          - "444:443"
         env:
           PUID: 1000
           PGID: 1000
-          TZ: 'America/Los_Angeles'
+          TZ: "America/Los_Angeles"
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start nextcloud container
+      ansible.builtin.systemd :
+        name: "container-nextcloud.service"
+        enabled: true
+        state: started
