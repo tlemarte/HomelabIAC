@@ -51,6 +51,7 @@
 
     - name: Start protonvpn container
       ansible.builtin.systemd :
+        daemon_reload: true
         name: "container-protonvpn.service"
         enabled: true
         state: started

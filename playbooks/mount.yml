@@ -19,7 +19,7 @@
     - name: Mount containers share
       ansible.posix.mount:
         src: TRUENAS:{{ CONTAINERS_PATH }}
-        path: "{{ CONTAINERS_PATH }}"
+        path: "{{ CONTAINERS_PATH }}/"
         opts:
           - rw
           - context="system_u:object_r:container_file_t:s0"
