@@ -30,6 +30,8 @@
         # sudo setsebool -P container_use_devices=true
         device:
           - "{{ CONTAINERS_PATH }}/heimdall/config:/config:rwm"
+        volume:
+          - "{{ CONTAINERS_PATH }}/heimdall/config:/config"
         ports:
           - 800:80
           - 4430:443

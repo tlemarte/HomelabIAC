@@ -35,6 +35,10 @@
           - "{{ CONTAINERS_PATH }}/readarr/config:/config:rwm"
           - "{{ MEDIA_PATH }}/books:/books:rwm"
           - "{{ MEDIA_PATH }}/downloads/complete:/downloads:rwm"
+        volume:
+          - "{{ CONTAINERS_PATH }}/readarr/config:/config"
+          - "{{ MEDIA_PATH }}/books:/books"
+          - "{{ MEDIA_PATH }}/downloads/complete:/downloads"
         network: "container:protonvpn"
         env:
           PUID: 1000

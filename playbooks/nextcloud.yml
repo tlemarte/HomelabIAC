@@ -30,6 +30,9 @@
         device:
           - "{{ CONTAINERS_PATH }}/nextcloud/config:/config:rwm"
           - "{{ CONTAINERS_PATH }}/nextcloud:/data:rwm"
+        volume:
+          - "{{ CONTAINERS_PATH }}/nextcloud/config:/config"
+          - "{{ CONTAINERS_PATH }}/nextcloud:/data"
         ports:
           - "444:443"
         env:

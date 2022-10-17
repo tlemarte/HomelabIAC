@@ -35,6 +35,10 @@
           - "{{ CONTAINERS_PATH }}/lidarr/config:/config:rwm"
           - "{{ MEDIA_PATH }}/music:/music:rwm"
           - "{{ MEDIA_PATH }}/downloads/complete:/downloads:rwm"
+        volume:
+          - "{{ CONTAINERS_PATH }}/lidarr/config:/config"
+          - "{{ MEDIA_PATH }}/music:/music"
+          - "{{ MEDIA_PATH }}/downloads/complete:/downloads"
         network: "container:protonvpn"
         env:
           PUID: 1000

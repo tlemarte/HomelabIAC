@@ -31,6 +31,8 @@
         # sudo setsebool -P container_use_devices=true
         device:
           - "{{ CONTAINERS_PATH }}/prowlarr/config:/config:rwm"
+        volume:
+          - "{{ CONTAINERS_PATH }}/prowlarr/config:/config"
         network: "container:protonvpn"
         env:
           PUID: 1000

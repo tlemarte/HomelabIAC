@@ -35,6 +35,10 @@
           - "{{ CONTAINERS_PATH }}/sonarr/config:/config:rwm"
           - "{{ MEDIA_PATH }}/tvshows:/tv:rwm"
           - "{{ MEDIA_PATH }}/downloads/complete:/downloads:rwm"
+        volume:
+          - "{{ CONTAINERS_PATH }}/sonarr/config:/config"
+          - "{{ MEDIA_PATH }}/tvshows:/tv"
+          - "{{ MEDIA_PATH }}/downloads/complete:/downloads"
         network: "container:protonvpn"
         env:
           PUID: 1000

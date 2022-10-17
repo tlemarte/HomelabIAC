@@ -35,6 +35,10 @@
           - "{{ MEDIA_PATH }}/downloads:/downloads:rwm"
           - "{{ CONTAINERS_PATH }}/transmission/config:/config:rwm"
           - "{{ CONTAINERS_PATH }}/transmission/watch:/watch:rwm"
+        volume:
+          - "{{ MEDIA_PATH }}/downloads:/downloads:rwm"
+          - "{{ CONTAINERS_PATH }}/transmission/config:/config:rwm"
+          - "{{ CONTAINERS_PATH }}/transmission/watch:/watch:rwm"
         network: "container:protonvpn"
         env:
           PUID: 1000

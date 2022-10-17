@@ -32,6 +32,9 @@
         device:
           - "{{ CONTAINERS_PATH }}/nginx-proxy-manager/data:/data:rwm"
           - "{{ CONTAINERS_PATH }}/nginx-proxy-manager/letsencrypt:/etc/letsencrypt:rwm"
+        volume:
+          - "{{ CONTAINERS_PATH }}/nginx-proxy-manager/data:/data"
+          - "{{ CONTAINERS_PATH }}/nginx-proxy-manager/letsencrypt:/etc/letsencrypt"        
         ports:
           - "443:443"
           - "80:80"
