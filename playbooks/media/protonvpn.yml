@@ -14,7 +14,7 @@
         name: protonvpn
         image: "ghcr.io/tprasadtp/protonvpn:latest"
         # Next two are managed by systemd
-        state: created
+        state: present
         restart_policy: "no"
         # privileged: true
         cap_add:
