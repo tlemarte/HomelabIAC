@@ -1,0 +1,45 @@
+- name: Ensure container-selinux is installed
+  ansible.builtin.package:
+    name: container-selinux
+    state: present
+
+- name: Ensure Podman is installed
+  ansible.builtin.package:
+    name: podman
+    state: present
+
+- name: Ensure Podman service is running
+  ansible.builtin.service:
+    name: podman
+    state: started
+    enabled: yes
+
+- name: Pull heimdall image
+  containers.podman.podman_image:
+    name: "lscr.io/linuxserver/heimdall"
+    tag: latest
+
+- name: Ensure directories present for Heimdall
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "/opt/heimdall"
+    - "/opt/heimdall/config"
+
+- name: Create heimdall container
+  containers.podman.podman_container:
+    name: heimdall
+    image: "lscr.io/linuxserver/heimdall:latest"
+
+    restart_policy: unless-stopped
+    privileged: true
+    volume:
+      - "/opt/heimdall/config:/config:z"
+    ports:
+      - "800:80"
+      - "4430:443"
+    env:
+      PUID: 1000
+      PGID: 1000
+      TZ: "America/Los_Angeles"

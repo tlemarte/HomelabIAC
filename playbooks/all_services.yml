@@ -1,0 +1,7 @@
+---
+- name: Setup ProtonWire and Transmission
+  hosts: rhel01
+  become: true
+  roles:
+    - role: protonwire
+    - role: transmission

@@ -18,7 +18,7 @@
         - "{{ MEDIA_PATH }}/movies"
         - "{{ MEDIA_PATH }}/music"
         - "{{ MEDIA_PATH }}/audiobooks"
-        - "{{ CONTAINERS_PATH }}/jellyfin/config"
+        - "/opt/jellyfin/config"
 
     - name: Create jellyfin container
       containers.podman.podman_container:
@@ -36,13 +36,13 @@
           - "{{ MEDIA_PATH }}/movies:/data/movies:rwm"
           - "{{ MEDIA_PATH }}/music:/data/music:rwm"
           - "{{ MEDIA_PATH }}/audiobooks:/data/audiobooks:rwm"
-          - "{{ CONTAINERS_PATH }}/jellyfin/config:/config:rwm"
+          - "/opt/jellyfin/config:/config:rwm"
         volume:
           - "{{ MEDIA_PATH }}/tvshows:/data/tvshows"
           - "{{ MEDIA_PATH }}/movies:/data/movies"
           - "{{ MEDIA_PATH }}/music:/data/music"
           - "{{ MEDIA_PATH }}/audiobooks:/data/audiobooks"
-          - "{{ CONTAINERS_PATH }}/jellyfin/config:/config"        
+          - "/opt/jellyfin/config:/config"        
         ports:
           - "8096:8096"
           - "8920:8920"

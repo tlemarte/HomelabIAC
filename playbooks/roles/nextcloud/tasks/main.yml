@@ -1,0 +1,57 @@
+#------ Nextcloud <https://github.com/linuxserver/docker-nextcloud> ------ 
+- name: Run nextcloud container
+  hosts: rhel01
+  become: true
+  tasks:
+    - name: Ensure container-selinux is installed
+      ansible.builtin.package:
+        name: container-selinux
+        state: present
+    - name: Ensure Podman is installed
+      ansible.builtin.package:
+        name: podman
+        state: present
+    - name: Ensure Podman service is running
+      ansible.builtin.service:
+        name: podman
+        state: started
+        enabled: yes
+    - name: Pull nextcloud image
+      containers.podman.podman_image:
+        name: 'lscr.io/linuxserver/nextcloud'
+        tag: latest
+
+    - name: Create directories for nextcloud container
+      file:
+        path: '{{ item }}'
+        state: directory
+      with_items:
+        - '/opt/nextcloud'
+        - '/opt/nextcloud/config'
+        - '/opt/nextcloud/data'
+
+    - name: Create nextcloud container
+      containers.podman.podman_container:
+        name: nextcloud
+        image: 'lscr.io/linuxserver/nextcloud:latest'
+        state: started
+        restart_policy: unless-stopped
+        volume:
+          - "/opt/nextcloud/config:/config:z"
+          - "/opt/nextcloud:/data:z"
+        ports:
+          - "444:443"
+        env:
+          PUID: 1000
+          PGID: 1000
+          TZ: "America/Los_Angeles"
+        generate_systemd:
+          path: "/etc/systemd/system/"
+          new: "yes"
+          restart_policy: "on-failure"
+
+    - name: Start nextcloud container
+      ansible.builtin.systemd :
+        name: "container-nextcloud.service"
+        enabled: true
+        state: started

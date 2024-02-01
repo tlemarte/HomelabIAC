@@ -1,0 +1,48 @@
+---
+- name: Ensure container-selinux is installed
+  ansible.builtin.package:
+    name: container-selinux
+    state: present
+
+- name: Ensure Podman is installed
+  ansible.builtin.package:
+    name: podman
+    state: present
+
+- name: Ensure Podman service is running
+  ansible.builtin.service:
+    name: podman
+    state: started
+    enabled: 'yes'
+    
+- name: Pull transmission image
+  containers.podman.podman_image:
+    name: 'lscr.io/linuxserver/transmission:latest'
+    tag: latest
+
+- name: Create directories for transmission container
+  file:
+    path: '{{ item }}'
+    state: directory
+  loop:
+    - /opt/transmission
+    - /opt/transmission/downloads
+    - /opt/transmission/config
+    - /opt/transmission/watch
+
+- name: Create transmission container
+  containers.podman.podman_container:
+    name: transmission
+    image: 'lscr.io/linuxserver/transmission:latest'
+    restart_policy: unless-stopped
+    network_mode: 'container:protonwire'
+    volume:
+      - '/opt/transmission/downloads:/downloads:z'
+      - '/opt/transmission/config:/config:z'
+      - '/opt/transmission/watch:/watch:z'
+    env:
+      PUID: 1000
+      PGID: 1000
+      TZ: America/Los_Angeles
+      USER: temporary
+      PASS: temporary

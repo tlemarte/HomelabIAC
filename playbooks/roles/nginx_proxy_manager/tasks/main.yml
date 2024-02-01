@@ -1,0 +1,49 @@
+---
+- name: Ensure container-selinux is installed
+  ansible.builtin.package:
+    name: container-selinux
+    state: present
+- name: Ensure Podman is installed
+  ansible.builtin.package:
+    name: podman
+    state: present
+- name: Ensure Podman service is running
+  ansible.builtin.service:
+    name: podman
+    state: started
+    enabled: yes
+- name: Pull Nginx Proxy Manager image
+  containers.podman.podman_image:
+    name: jc21/nginx-proxy-manager:latest
+    tag: latest
+- name: Ensure directories present for Nginx Proxy Manager
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "/opt/nginx-proxy-manager"
+    - "/opt/nginx-proxy-manager/data"
+    - "/opt/nginx-proxy-manager/letsencrypt"
+- name: Create and run Nginx Proxy Manager container
+  containers.podman.podman_container:
+    name: nginx-proxy-manager
+    image: jc21/nginx-proxy-manager:latest
+    restart_policy: unless-stopped
+    privileged: true
+    volume:
+      - "/opt/nginx-proxy-manager/data:/data:z"
+      - "/opt/nginx-proxy-manager/letsencrypt:/etc/letsencrypt:z"
+    ports:
+      - 443:443
+      - 80:80
+      - 81:81
+- name: Create Cockpit configuration file
+  ansible.builtin.copy:
+    content: |
+      [WebService]
+      Origins = https://cockpit.lemarte.tech wss://cockpit.lemarte.tech
+      ProtocolHeader = X-Forwarded-Proto
+    dest: /etc/cockpit/cockpit.conf
+    owner: root
+    group: root
+    mode: 0644

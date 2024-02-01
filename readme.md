@@ -1,60 +1,157 @@
-# HomelabIAC
-This is repository hold the ansible playbook and additional documentation for my homelab
-## To-Do
-* [rhel01](#rhel01)
-* [ubuntu01](#ubuntu01)
-* [nginx-proxy-manager](#nginx-proxy-manager)
-* [pi-hole](#pi-hole)
-### rhel01
-#### Configuration to enable ansible connection
-- Ansible requires python3
-```
-yum install python3
-```
-- On the machine running Ansible (AnsibleController), run the following command to create a key pair for SSH connection without a password
-```
-`ssh-keygen -t rsa`
+
+# Homelab Infrastructure as Code (IAC)
+
+---
+
+This repository contains documentation and configuration files for my homelab setup.
+
+---
+
+## Infrastructure Overview
+
+* [Proxmox](#proxmox)
+  * [RHEL01](#rhel01)
+    * [Nginx Proxy Manager](#nginx-proxy-manager)
+    * [Nextcloud]
+
+    * Jellyfin
+    * Transmission
+    * Bazarr
+    * Lidarr
+    * Prowlarr
+    * Radarr
+    * Readarr
+    * Sonarr
+    * Nagios
+    * Guacamole
+  * [RHEL02](#rhel02)
+  * [UBUNTU01](#ubuntu01)
+    * [Pi-hole](#pi-hole)
+* [TrueNAS](#truenas)
+
+---
+
+## Proxmox
+
+---
+
+## RHEL01
+
+---
+
+## RHEL02
+
+RHEL 8.6
+12 vcpu
+16gb mem 256gb storage
+
+---
+
+### Done: [Install Ansible](#https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+
+```bash
+[user@ControlNode ~] sudo dnf install ansible-core
 ```
 
-- Copy the is_rsa.pub from the machine running Ansible to the controlled node as authorized_keys
+Generate an SSH key pair on the Ansible Controller to establish passwordless connections. Press enter twice to accept the default file location and password.
+
+```bash
+[user@ControlNode ~] ssh-keygen -t rsa
 ```
-`scp user@AnsibleController:~/.ssh/id_rsa.pub ~/.ssh/`
-mv id_rsa.pub authorized_keys
+
+Copy the public SSH key generated in the previous step to the Ansible Host
+
+```bash
+[user@ControlNode ~]  ssh-copy-id user@ManagedNode
 ```
-- Enable sudo access without password
+
+I want to enable passwordless sudo access for my credentials. On the machine targeted previously, open the /etc/sudoers file using a text editor like nano or vi with sudo privileges:
+
+```bash
+[user@ManagedNode ~] sudo visudo
 ```
-`echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers`
+
+Add the following line at the end of the file, replacing $user with the appropriate username:
+
+```bash
+$user ALL=(ALL:ALL) NOPASSWD: ALL
 ```
-#### After ansible configuration
-- QEMU quest agent for proxmox
+
+#### Done: QEMU quest agent for proxmox
+
 ```bash
 yum install qemu-guest-agent
 systemctl start qemu-guest-agent
 ```
-- Enable Cockpit
+
+#### Install ansible collections
+
+```bash
+ansible-galaxy collection install containers.podman
+ansible-galaxy collection install community.general
 ```
+
+#### Done: Enable Cockpit
+
+```bash
 systemctl enable --now cockpit.socket
 ```
 
-### ubuntu01
-- On the machine running Ansible (AnsibleController), run the following command to create a key pair for SSH connection without a password
-```
-`ssh-keygen -t rsa`
+### TO DO: Encrypt ansible vault items
+
+Create an encrypted version of the OpenVPN configuration file using the ansible-vault command:
+
+```bash
+ansible-vault encrypt /home/ansible/conf.ovpn --output /home/ansible/conf_vaulted.ovpn
 ```
 
-- Copy the is_rsa.pub from the machine running Ansible to the controlled node as authorized_keys
+You will be prompted to enter a new vault password. Make sure to remember this password, as you will need it to decrypt the file later.\
+Now, you can update the OpenVPN role's task that copies the configuration file to use the encrypted version:
+
+```yaml
+- name: Copy OpenVPN configuration file
+  ansible.builtin.copy:
+    src: "{{ openvpn_config_file }}"
+    dest: "/opt/openvpn/config/"
+    mode: 0644
+  vars:
+    openvpn_config_file: "{{ vaulted_openvpn_config_file }}"
+  become: true
+  no_log: true
 ```
-`scp user@AnsibleController:~/.ssh/id_rsa.pub ~/.ssh/`
-mv id_rsa.pub authorized_keys
+
+In the site.yml playbook, update the variable assignment to use the vaulted file:
+
+```yaml
+- role: openvpn
+  openvpn_config_file: /home/ansible/conf_vaulted.ovpn
 ```
-- Enable sudo access without password
-```
-`echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers`
-```
-### nginx-proxy-manager
-- Proxy cockpit
-https://cockpit-project.org/external/wiki/Proxying-Cockpit-over-NGINX
+
+Finally, when running the playbook, you need to provide the vault password. You can do this in multiple ways:
+
+1. Pass the password interactively with the --ask-vault-pass option:
+
 ```bash
-sudo echo -e "[WebService]\nOrigins = https://cockpit.lemarte.tech wss://cockpit.lemarte.tech\nProtocolHeader = X-Forwarded-Proto" | sudo tee /etc/cockpit/cockpit.conf
+ansible-playbook -i inventory.ini site.yml --ask-vault-pass
 ```
-### pi-hole
+
+2. Store the password in a file and provide the path to the file with the --vault-password-file option:
+
+```bash
+ansible-playbook -i inventory.ini site.yml --vault-password-file /path/to/vault_password_file
+```
+
+By using Ansible Vault, the OpenVPN configuration file will be securely encrypted on the control node, and it will only be decrypted when deploying it to the managed node.
+
+---
+
+## UBUNTU01
+
+---
+
+### [Pi-hole](https://pi-hole.net/)
+<https://docs.pi-hole.net/guides/dns/unbound/>
+
+### Unbound
+
+[Unbound](https://github.com/NLnetLabs/unbound)
