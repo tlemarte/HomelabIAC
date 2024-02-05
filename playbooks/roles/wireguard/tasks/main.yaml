@@ -15,39 +15,41 @@
     state: started
     enabled: yes
 
-- name: Pull nextcloud image
+- name: Pull wireguard image
   containers.podman.podman_image:
-    name: 'lscr.io/linuxserver/nextcloud'
+    name: ''
     tag: latest
 
-- name: Create directories for nextcloud container
+- name: Create directories for wireguard container
   file:
     path: '{{ item }}'
     state: directory
   with_items:
     - '/opt/nextcloud'
-    - '/opt/nextcloud/config'
-    - '/opt/nextcloud/data'
 
-- name: Create nextcloud container
+- name: Create and run wireguard container
   containers.podman.podman_container:
-    name: nextcloud
-    image: 'lscr.io/linuxserver/nextcloud:latest'
-    state: started
+    name: wireguard
+    image: lscr.io/linuxserver/wireguard:latest
     restart_policy: unless-stopped
-    volume:
-      - "/opt/nextcloud/config:/config:z"
-      - "/opt/nextcloud:/data:z"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SERVERURL=wireguard.lemarte.tech
+      - SERVERPORT=51820 #optional
+      - PEERS=1 #optional
+      - PEERDNS=auto #optional
+    volumes:
+      - /path/to/appdata/config:/config
+      - /lib/modules:/lib/modules #optional
     ports:
-      - "444:443"
-    env:
-      PUID: 1000
-      PGID: 1000
-      TZ: "America/Los_Angeles"
-    generate_systemd:
-      path: "/etc/systemd/system/"
-      new: "yes"
-      restart_policy: "on-failure"
+      - 51820:51820/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
 
 - name: Start nextcloud container
   ansible.builtin.systemd :

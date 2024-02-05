@@ -1,0 +1,12 @@
+---
+- name: Allow container to manage cgroup
+  command: semanage boolean -m --on container_manage_cgroup
+
+- name: Allow virt to qemu ga read nonsecurity files
+  command: semanage boolean -m --on virt_qemu_ga_read_nonsecurity_files
+
+- name: Allow virt to sandbox use all caps
+  command: semanage boolean -m --on virt_sandbox_use_all_caps
+
+- name: Allow virt to use nfs
+  command: semanage boolean -m --on virt_use_nfs
