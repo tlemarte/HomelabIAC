@@ -1,0 +1,5 @@
+# master playbook
+# ansible-playbook site.yml --limit webservers
+# ansible-playbook webservers.yml
+---
+  - import_playbook: nginx_proxy_manager.yaml

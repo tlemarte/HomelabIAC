@@ -1,157 +1,64 @@
 
-# Homelab Infrastructure as Code (IAC)
-
----
-
-This repository contains documentation and configuration files for my homelab setup.
-
----
-
-## Infrastructure Overview
+# Infrastructure Overview
 
 * [Proxmox](#proxmox)
   * [RHEL01](#rhel01)
-    * [Nginx Proxy Manager](#nginx-proxy-manager)
-    * [Nextcloud]
-
-    * Jellyfin
-    * Transmission
-    * Bazarr
-    * Lidarr
-    * Prowlarr
-    * Radarr
-    * Readarr
-    * Sonarr
-    * Nagios
-    * Guacamole
-  * [RHEL02](#rhel02)
-  * [UBUNTU01](#ubuntu01)
+    * [Nginx Proxy Manager](#Nging-proxy-manager)
+    * [Nextcloud](#Nextcloud)
+    * [Jellyfin](#Jellyfin)
+    * [Transmission](#Transmission)
+    * [Bazarr](#Bazarr)
+    * [Lidarr](#Lidarr)
+    * [Prowlarr](#Prowlarr)
+    * [Radarr](#Radarr)
+    * [Readarr](#Readarr)
+    * [Sonarr](#Sonarr)
+    * [Guacamole](#Guacamole)
+  * [Rhel02](#rhel02)
+  * [Ubuntu01](#ubuntu01)
     * [Pi-hole](#pi-hole)
 * [TrueNAS](#truenas)
-
+* [Orangebox](#Orangebox)
+* [Fedora01](#Fedora01)
+  * [Ansible](#Ansible)
 ---
+# [Proxmox](https://proxmox.lemarte.tech:8006/)
+## [Cloud-init](https://pve.proxmox.com/wiki/Cloud-Init_Support)
+```bash
+# Download and import Ubuntu 22.04 QCow2 UEFI/GPT Bootable disk image with linux-kvm KVM optimised kernel
+wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
 
-## Proxmox
+# The next step is to configure a CD-ROM drive, which will be used to pass the Cloud-Init data to the VM.
 
+qm set 110 --ide2 local-lvm:cloudinit
+
+# To be able to boot directly from the Cloud-Init image, set the boot parameter to order=scsi0 to restrict BIOS to boot from this disk only. This will speed up booting, because VM BIOS skips the testing for a bootable CD-ROM.
+
+qm set 110 --boot order=scsi0
+
+# For many Cloud-Init images, it is required to configure a serial console and use it as a display. If the configuration doesn’t work for a given image however, switch back to the default display instead.
+
+qm set 110 --serial0 socket --vga serial0
+
+# In a last step, it is helpful to convert the VM into a template. From this template you can then quickly create linked clones. The deployment from VM templates is much faster than creating a full clone (copy).
+
+qm template 110
+```
+## [Rhel01](https://rhel01.lemarte.tech:9090)
+### [Cockpit]{https://coockpit.lemarte.tech:9090}
+### [Nging-proxy-manager](http://rhel01.lemarte.tech:81/login)
+### [Authentik]()
 ---
-
-## RHEL01
-
+## [Rhel02](https://rhel02.lemarte.tech:9090)
+### [FreeIPA]?
 ---
-
-## RHEL02
-
-RHEL 8.6
-12 vcpu
-16gb mem 256gb storage
-
+## [Ubuntu01]()
+### [Pi-hole](https://pi.hole/admin/)
+### [Unbound](https://github.com/NLnetLabs/unbound)
 ---
-
-### Done: [Install Ansible](#https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
-
+# [Truenas](https://truenas.local)
+# [Fedora01](https://fedora01.lemarte.tech:9090)
+## [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 ```bash
 [user@ControlNode ~] sudo dnf install ansible-core
 ```
-
-Generate an SSH key pair on the Ansible Controller to establish passwordless connections. Press enter twice to accept the default file location and password.
-
-```bash
-[user@ControlNode ~] ssh-keygen -t rsa
-```
-
-Copy the public SSH key generated in the previous step to the Ansible Host
-
-```bash
-[user@ControlNode ~]  ssh-copy-id user@ManagedNode
-```
-
-I want to enable passwordless sudo access for my credentials. On the machine targeted previously, open the /etc/sudoers file using a text editor like nano or vi with sudo privileges:
-
-```bash
-[user@ManagedNode ~] sudo visudo
-```
-
-Add the following line at the end of the file, replacing $user with the appropriate username:
-
-```bash
-$user ALL=(ALL:ALL) NOPASSWD: ALL
-```
-
-#### Done: QEMU quest agent for proxmox
-
-```bash
-yum install qemu-guest-agent
-systemctl start qemu-guest-agent
-```
-
-#### Install ansible collections
-
-```bash
-ansible-galaxy collection install containers.podman
-ansible-galaxy collection install community.general
-```
-
-#### Done: Enable Cockpit
-
-```bash
-systemctl enable --now cockpit.socket
-```
-
-### TO DO: Encrypt ansible vault items
-
-Create an encrypted version of the OpenVPN configuration file using the ansible-vault command:
-
-```bash
-ansible-vault encrypt /home/ansible/conf.ovpn --output /home/ansible/conf_vaulted.ovpn
-```
-
-You will be prompted to enter a new vault password. Make sure to remember this password, as you will need it to decrypt the file later.\
-Now, you can update the OpenVPN role's task that copies the configuration file to use the encrypted version:
-
-```yaml
-- name: Copy OpenVPN configuration file
-  ansible.builtin.copy:
-    src: "{{ openvpn_config_file }}"
-    dest: "/opt/openvpn/config/"
-    mode: 0644
-  vars:
-    openvpn_config_file: "{{ vaulted_openvpn_config_file }}"
-  become: true
-  no_log: true
-```
-
-In the site.yml playbook, update the variable assignment to use the vaulted file:
-
-```yaml
-- role: openvpn
-  openvpn_config_file: /home/ansible/conf_vaulted.ovpn
-```
-
-Finally, when running the playbook, you need to provide the vault password. You can do this in multiple ways:
-
-1. Pass the password interactively with the --ask-vault-pass option:
-
-```bash
-ansible-playbook -i inventory.ini site.yml --ask-vault-pass
-```
-
-2. Store the password in a file and provide the path to the file with the --vault-password-file option:
-
-```bash
-ansible-playbook -i inventory.ini site.yml --vault-password-file /path/to/vault_password_file
-```
-
-By using Ansible Vault, the OpenVPN configuration file will be securely encrypted on the control node, and it will only be decrypted when deploying it to the managed node.
-
----
-
-## UBUNTU01
-
----
-
-### [Pi-hole](https://pi-hole.net/)
-<https://docs.pi-hole.net/guides/dns/unbound/>
-
-### Unbound
-
-[Unbound](https://github.com/NLnetLabs/unbound)

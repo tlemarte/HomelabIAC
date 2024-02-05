@@ -1,0 +1,5 @@
+---
+- hosts: rhel01
+  roles:
+    - common
+    - nginx_proxy_manager
