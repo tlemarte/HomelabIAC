@@ -2,6 +2,7 @@
 # ansible-playbook site.yml --limit webservers
 # ansible-playbook webservers.yml
 ---
+  - import_playbook: init-proxmox.yaml
   - import_playbook: nginx_proxy_manager.yaml
   - import_playbook: nextcloud.yaml
   - import_playbook: rhel01.yaml
